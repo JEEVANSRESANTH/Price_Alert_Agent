@@ -1,0 +1,145 @@
+
+AI PRICE TRACKER – COMMAND REFERENCE
+====================================
+
+--------------------------------------------------
+1. RUN PROJECT MANUALLY (LOCAL)
+--------------------------------------------------
+
+Go to project folder
+cd D:\projects\Price_Tracker_agent
+
+Activate virtual environment
+venv\Scripts\activate
+
+Install dependencies
+pip install -r requirements.txt
+
+Start FastAPI backend
+uvicorn API.app:app --host 0.0.0.0 --port 8000
+
+Open API in browser
+http://127.0.0.1:8000/docs
+
+Start worker (open new terminal)
+cd D:\projects\Price_Tracker_agent
+venv\Scripts\activate
+python main.py
+
+Open UI
+UI/index.html
+
+
+--------------------------------------------------
+2. RUN USING DOCKER (LOCAL)
+--------------------------------------------------
+
+Go to project
+cd D:\projects\Price_Tracker_agent
+
+Build API image
+docker build -t price-tracker-api -f Dockerfile .
+
+Run API container
+docker run -p 8000:8000 price-tracker-api
+
+Build worker image
+docker build -t price-tracker-worker -f Dockerfile.worker .
+
+Run worker container
+docker run price-tracker-worker
+
+
+--------------------------------------------------
+3. AZURE DEPLOYMENT COMMANDS
+--------------------------------------------------
+
+Login to Azure
+az login
+
+Login to Azure Container Registry
+az acr login --name jeevanpriceagentregistry
+
+
+---------------- API IMAGE ----------------
+
+Build API image
+docker build -t price-tracker-api:v1 -f Dockerfile .
+
+Tag image for Azure
+docker tag price-tracker-api:v1 jeevanpriceagentregistry.azurecr.io/price-tracker-api:v1
+
+Push image to Azure registry
+docker push jeevanpriceagentregistry.azurecr.io/price-tracker-api:v1
+
+Update Azure container app
+az containerapp update --name price-tracker-api --resource-group price-tracker-rg --image jeevanpriceagentregistry.azurecr.io/price-tracker-api:v1
+
+
+---------------- WORKER IMAGE ----------------
+
+Build worker image
+docker build -t price-tracker-worker:v1 -f Dockerfile.worker .
+
+Tag worker image
+docker tag price-tracker-worker:v1 jeevanpriceagentregistry.azurecr.io/price-tracker-worker:v1
+
+Push worker image
+docker push jeevanpriceagentregistry.azurecr.io/price-tracker-worker:v1
+
+Update worker container
+az containerapp update --name price-tracker-worker --resource-group price-tracker-rg --image jeevanpriceagentregistry.azurecr.io/price-tracker-worker:v1
+
+
+---------------- UI IMAGE ----------------
+
+Build UI image
+docker build -t price-tracker-ui:v1 -f Dockerfile.ui .
+
+Tag UI image
+docker tag price-tracker-ui:v1 jeevanpriceagentregistry.azurecr.io/price-tracker-ui:v1
+
+Push UI image
+docker push jeevanpriceagentregistry.azurecr.io/price-tracker-ui:v1
+
+Update UI container
+az containerapp update --name price-tracker-ui --resource-group price-tracker-rg --image jeevanpriceagentregistry.azurecr.io/price-tracker-ui:v1
+
+
+--------------------------------------------------
+4. USEFUL AZURE COMMANDS
+--------------------------------------------------
+
+Check container logs
+az containerapp logs show --name price-tracker-worker --resource-group price-tracker-rg --follow
+
+List container apps
+az containerapp list -o table
+
+Restart container revision
+az containerapp revision list --name price-tracker-worker --resource-group price-tracker-rg
+az containerapp revision restart --name price-tracker-worker --resource-group price-tracker-rg --revision <REVISION_NAME>
+
+
+--------------------------------------------------
+5. DOCKER DEBUG COMMANDS
+--------------------------------------------------
+
+List images
+docker images
+
+List running containers
+docker ps
+
+Stop container
+docker stop <container_id>
+
+View logs
+docker logs <container_id>
+
+Clean unused images
+docker image prune -a
+
+Clean stopped containers
+docker container prune
+

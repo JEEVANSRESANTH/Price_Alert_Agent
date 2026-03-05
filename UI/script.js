@@ -1,7 +1,6 @@
 const API = "https://price-tracker-api.greenplant-9b018a93.southeastasia.azurecontainerapps.io"
 
 let chart = null
-let lastPrices = {}
 let selectedProduct = null
 let drops = []
 
@@ -11,18 +10,29 @@ let drops = []
 
 async function loadProducts(){
 
+    drops = []
+
     const res = await fetch(`${API}/products/`)
     const products = await res.json()
 
-    const table = document.getElementById("products")
+    const table = document.getElementById("products-body")
     table.innerHTML = ""
 
     for(const p of products){
 
-        const priceRes = await fetch(`${API}/prices/${p.id}`)
-        const history = await priceRes.json()
+        const priceRes = await fetch(`${API}/prices/last/${p.id}`)
 
-        let latest = history.length ? history[history.length-1].price : "—"
+        let history = []
+
+        if(priceRes.ok){
+            history = await priceRes.json()
+        }
+
+        if(!Array.isArray(history)){
+            history = []
+        }
+
+        let latest = history.price ?? "—"
 
         if(history.length >= 2){
 
@@ -57,24 +67,22 @@ async function loadProducts(){
     renderDrops()
 }
 
+
 // ------------------------------
-// ADD PRODUCT (FIXED)
+// ADD PRODUCT
 // ------------------------------
+
 async function addProduct(){
 
     const name = document.getElementById("name").value
     const url = document.getElementById("url").value
 
-    const res = await fetch(`${API}/products/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name: name,
-            url: url
-        })
-    })
+    const res = await fetch(
+        `${API}/products/?name=${encodeURIComponent(name)}&url=${encodeURIComponent(url)}`,
+        {
+            method: "POST"
+        }
+    )
 
     if(!res.ok){
         console.error("Failed to add product", await res.text())
@@ -86,21 +94,32 @@ async function addProduct(){
 
     loadProducts()
 }
+
+
 // ------------------------------
 // VIEW PRICE HISTORY
 // ------------------------------
 
 async function viewHistory(id,name){
 
-    selectedProduct = id
+    const res = await fetch(`${API}/prices/history/${id}`)
 
-    const res = await fetch(`${API}/prices/${id}`)
+    if(!res.ok){
+        console.log("No history yet")
+        return
+    }
+
     const history = await res.json()
+
+    if(!Array.isArray(history) || history.length === 0){
+        console.log("Empty history")
+        return
+    }
 
     const labels = history.map(p => new Date(p.timestamp).toLocaleTimeString())
     const prices = history.map(p => p.price)
 
-    const ctx = document.getElementById("chart").getContext("2d")
+    const ctx = document.getElementById("priceChart").getContext("2d")
 
     if(chart) chart.destroy()
 
@@ -119,13 +138,14 @@ async function viewHistory(id,name){
     })
 }
 
+
 // ------------------------------
 // RENDER BIGGEST DROPS
 // ------------------------------
 
 function renderDrops(){
 
-    const container = document.getElementById("drops")
+    const container = document.getElementById("leaderboard")
 
     drops.sort((a,b)=>b.drop-a.drop)
 
@@ -143,6 +163,7 @@ function renderDrops(){
     }
 }
 
+
 // ------------------------------
 // DARK MODE
 // ------------------------------
@@ -151,6 +172,7 @@ function toggleDark(){
 
     document.body.classList.toggle("dark")
 }
+
 
 // ------------------------------
 // INIT
