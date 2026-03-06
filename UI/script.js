@@ -1,7 +1,6 @@
 const API = "https://price-tracker-api.greenplant-9b018a93.southeastasia.azurecontainerapps.io"
 
 let chart = null
-let selectedProduct = null
 let drops = []
 
 // ------------------------------
@@ -20,33 +19,13 @@ async function loadProducts(){
 
     for(const p of products){
 
+        let latest = "—"
+
         const priceRes = await fetch(`${API}/prices/last/${p.id}`)
 
-        let history = []
-
         if(priceRes.ok){
-            history = await priceRes.json()
-        }
-
-        if(!Array.isArray(history)){
-            history = []
-        }
-
-        let latest = history.price ?? "—"
-
-        if(history.length >= 2){
-
-            const old = history[history.length-2].price
-            const diff = old - latest
-
-            if(diff > 0){
-
-                drops.push({
-                    name:p.name,
-                    drop:diff,
-                    percent:((diff/old)*100).toFixed(2)
-                })
-            }
+            const data = await priceRes.json()
+            latest = data.price
         }
 
         const row = document.createElement("tr")
@@ -63,8 +42,6 @@ async function loadProducts(){
 
         table.appendChild(row)
     }
-
-    renderDrops()
 }
 
 
@@ -80,12 +57,12 @@ async function addProduct(){
     const res = await fetch(
         `${API}/products/?name=${encodeURIComponent(name)}&url=${encodeURIComponent(url)}`,
         {
-            method: "POST"
+            method:"POST"
         }
     )
 
     if(!res.ok){
-        console.error("Failed to add product", await res.text())
+        console.log("Failed to add product")
         return
     }
 
@@ -116,7 +93,10 @@ async function viewHistory(id,name){
         return
     }
 
-    const labels = history.map(p => new Date(p.timestamp).toLocaleTimeString())
+    const labels = history.map(p =>
+        new Date(p.timestamp).toLocaleTimeString()
+    )
+
     const prices = history.map(p => p.price)
 
     const ctx = document.getElementById("priceChart").getContext("2d")
@@ -155,7 +135,7 @@ function renderDrops(){
 
         const div = document.createElement("div")
 
-        div.innerHTML=`
+        div.innerHTML = `
             🔥 ${d.name} dropped ₹${d.drop} (${d.percent}%)
         `
 
@@ -169,7 +149,6 @@ function renderDrops(){
 // ------------------------------
 
 function toggleDark(){
-
     document.body.classList.toggle("dark")
 }
 

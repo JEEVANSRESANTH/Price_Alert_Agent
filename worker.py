@@ -76,3 +76,5 @@ Drop: ₹{drop} ({percent:.2f}%)
 
         print("Sleeping...")
         time.sleep(CHECK_INTERVAL)
+if __name__ == "__main__":
+    run_worker()

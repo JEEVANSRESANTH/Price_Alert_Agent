@@ -1,20 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
-import random
 from config import MIN_REASONABLE_PRICE
-
 
 def fetch_price(product_url):
 
     headers = {
-        "User-Agent": random.choice([
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-            "Mozilla/5.0 (X11; Linux x86_64)"
-        ]),
-        "Accept-Language": "en-IN,en;q=0.9",
-        "Accept": "text/html,application/xhtml+xml",
-        "Connection": "keep-alive"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept-Language": "en-IN,en;q=0.9"
     }
 
     try:
@@ -26,27 +18,16 @@ def fetch_price(product_url):
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # Amazon price selectors
-        selectors = [
-            ".a-price-whole",
-            ".a-offscreen",
-            "#priceblock_ourprice",
-            "#priceblock_dealprice"
-        ]
+        # multiple price selectors
+        price_tag = soup.select_one(
+            "#priceblock_ourprice, #priceblock_dealprice, .a-price-whole, .a-price span.a-offscreen"
+        )
 
-        price_text = None
-
-        for selector in selectors:
-            tag = soup.select_one(selector)
-            if tag:
-                price_text = tag.text
-                break
-
-        if not price_text:
+        if not price_tag:
             print("Price not found")
             return None
 
-        price = price_text.replace("₹", "").replace(",", "").strip()
+        price = price_tag.text.replace("₹","").replace(",","").strip()
 
         price = float(price)
 

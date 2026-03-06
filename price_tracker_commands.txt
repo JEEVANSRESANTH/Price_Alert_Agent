@@ -27,9 +27,11 @@ venv\Scripts\activate
 python main.py
 
 Open UI
-UI/index.html
+cd UI
+python -m http.server 5500
 
-
+API(script.js)="https://price-tracker-api.greenplant-9b018a93.southeastasia.azurecontainerapps.io"
+API(script.js)="http://127.0.0.1:8000"
 --------------------------------------------------
 2. RUN USING DOCKER (LOCAL)
 --------------------------------------------------
