@@ -7,6 +7,7 @@ The AI Price Tracker is a cloud-deployed full-stack application that automatical
 The system is built using a microservices architecture, where the API, worker, and UI run independently using Docker and are deployed on Azure Container Apps.
 
 URL link: https://price-tracker-ui.greenplant-9b018a93.southeastasia.azurecontainerapps.io/
+
 ✨ Features
 📦 Track multiple products using URLs
 🔄 Automated price scraping using worker agent
